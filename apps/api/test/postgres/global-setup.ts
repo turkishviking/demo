@@ -14,6 +14,17 @@ export default async function globalSetup(): Promise<void> {
     .withDatabase('cardsim_test')
     .withUsername('cardsim')
     .withPassword('cardsim')
+    // Base jetable : pas de durabilité, données en mémoire (les fsync coûtent ~1 s par TRUNCATE).
+    .withTmpFs({ '/var/lib/postgresql/data': 'rw' })
+    .withCommand([
+      'postgres',
+      '-c',
+      'fsync=off',
+      '-c',
+      'synchronous_commit=off',
+      '-c',
+      'full_page_writes=off',
+    ])
     .start();
   globalThis.__POSTGRES_CONTAINER__ = container;
 

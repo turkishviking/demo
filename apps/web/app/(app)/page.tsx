@@ -1,7 +1,9 @@
+import Link from 'next/link';
 import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { ApiStatusBadge } from '@/components/domain/api-status-badge';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getHealth } from '@/lib/api/server';
 
@@ -20,13 +22,17 @@ export default function DashboardPage() {
         <CardHeader>
           <CardTitle>Bienvenue sur CardSim</CardTitle>
           <CardDescription>
-            Le socle technique est en place. Les indicateurs et les transactions arriveront avec les
-            prochains jalons.
+            Les personnes et les groupes sont disponibles. Les indicateurs et les transactions
+            arriveront avec les prochains jalons.
           </CardDescription>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Groupes et personnes (M1), cartes (M2), transactions (M3), simulation (M4), dashboard
-          (M5).
+        <CardContent className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/people">Gérer les personnes</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/groups">Gérer les groupes</Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

@@ -6,6 +6,8 @@ import {
   type CorrelationContext,
 } from './shared/application/correlation.port';
 import type { RequestWithCorrelation } from './shared/presentation/http/correlation.middleware';
+import { CardholdersModule } from './cardholders/presentation/cardholders.module';
+import { ReportingModule } from './reporting/presentation/reporting.module';
 import { SharedModule } from './shared/presentation/shared.module';
 
 @Module({
@@ -28,7 +30,9 @@ import { SharedModule } from './shared/presentation/shared.module';
         },
       }),
     }),
-    // Les bounded contexts (CardholdersModule, CardsModule, …) s'ajoutent ici à partir de M1.
+    // Bounded contexts
+    CardholdersModule,
+    ReportingModule,
   ],
 })
 export class AppModule {}

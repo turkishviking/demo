@@ -36,7 +36,7 @@ Tout se passe dans la transaction du UnitOfWork.
 
 ```
 cardholders.persons           (id, first_name, last_name, email unique, status, registered_at, version)
-cardholders.groups            (id, name unique, max_members, status, version)
+cardholders.groups            (id, name, max_members, status, version)            -- unique index sur lower(name)
 cardholders.group_members     (group_id, person_id unique, joined_at)            -- PK (group_id, person_id)
 cards.cardholders             (person_id pk, status)                              -- projection locale
 cards.cards                   (id, cardholder_id, masked_pan, brand, status, block_reason,

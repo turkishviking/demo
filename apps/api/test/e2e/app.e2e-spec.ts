@@ -1,23 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { AppModule } from '../../src/app.module';
-import { configureApp } from '../../src/app.setup';
-import { testDatabaseUrl } from '../postgres/test-database';
+import { createTestApp } from './create-test-app';
 
 describe('API (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    process.env.DATABASE_URL = testDatabaseUrl();
-    process.env.NODE_ENV = 'test';
-    process.env.LOG_LEVEL = 'silent';
-    process.env.OUTBOX_RELAY_ENABLED = 'true';
-
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = moduleRef.createNestApplication();
-    configureApp(app);
-    await app.init();
+    app = await createTestApp();
   });
 
   afterAll(async () => {

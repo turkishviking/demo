@@ -22,12 +22,13 @@ Le nom d'un event est un **fait passé**, préfixé par son context. Montants : 
 
 | Event | Payload | Consommateurs |
 |---|---|---|
-| `PersonRegistered` | `personId, fullName, email` | Cards, Reporting |
-| `PersonRenamed` | `personId, fullName` | Reporting |
+| `PersonRegistered` | `personId, firstName, lastName, email, registeredAt` | Cards, Reporting |
+| `PersonRenamed` | `personId, firstName, lastName` | Reporting |
 | `PersonDeactivated` | `personId` | Cards, Cardholders (policy), Reporting |
 | `GroupCreated` | `groupId, name, maxMembers` | Reporting |
 | `GroupRenamed` | `groupId, name` | Reporting |
-| `PersonJoinedGroup` | `groupId, personId` | Reporting |
+| `GroupCapacityChanged` | `groupId, maxMembers` | Reporting |
+| `PersonJoinedGroup` | `groupId, personId, joinedAt` | Reporting |
 | `PersonLeftGroup` | `groupId, personId` | Reporting |
 | `GroupArchived` | `groupId` | Reporting |
 

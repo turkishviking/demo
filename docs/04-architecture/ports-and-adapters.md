@@ -18,8 +18,8 @@ Un **port** est une interface définie par le domaine ou l'application. Un **ada
 | Context | Port | Rôle | Adapters |
 |---|---|---|---|
 | Cardholders | `PersonRepository`, `GroupRepository` | persistance des agrégats | `Typeorm*`, `InMemory*` |
-| Cardholders | `GroupMembershipLookup` | `findGroupOf(personId)` | SQL / in-memory |
-| Cardholders | `PersonLookup` | `isActive(personId)` | SQL / in-memory |
+| Cardholders | `GroupLookup` | `findGroupOf(personId)`, `isNameTaken(name, except?)` | SQL / in-memory |
+| Cardholders | `PersonLookup` | `statusOf(personId)`, `isEmailTaken(email)` | SQL / in-memory |
 | Cards | `CardRepository` | persistance | `TypeormCardRepository`, `InMemoryCardRepository` |
 | Cards | `CardholderDirectory` | statut du titulaire (projection locale) | SQL / in-memory |
 | Cards | `PanGenerator` | PAN fictif + masque | `RandomLuhnPanGenerator`, `FixedPanGenerator` |
@@ -31,6 +31,8 @@ Un **port** est une interface définie par le domaine ou l'application. Un **ada
 | Simulation | `RandomGenerator` | aléatoire déterministe | `SeededRandomGenerator` |
 | Simulation | `Scheduler` | ticks | `IntervalScheduler`, `ManualScheduler` |
 | Simulation | `MerchantCatalog` | marchands fictifs | `StaticMerchantCatalog` |
+| Reporting | `CardholdersProjectionStore` | écriture de `rm_people` / `rm_groups` (versionnée) | SQL / in-memory |
+| Reporting | `CardholdersReadModel` | lectures paginées des personnes et des groupes | SQL / in-memory |
 | Reporting | `ReadModelCache` | cache de lecture (plus tard) | `NoopCache`, `InMemoryLruCache` |
 
 ## Exemple
@@ -61,3 +63,5 @@ export class BlockCardHandler implements CommandHandler<BlockCardCommand, void> 
 ## Tests de contrat
 
 Pour chaque repository, `describeCardRepositoryContract(factory)` définit les comportements attendus : round-trip complet, verrou optimiste, `null` si absent, events écrits dans l'outbox. Cette suite tourne sur `InMemoryCardRepository` (unit) et sur `TypeormCardRepository` (intégration, avec Testcontainers). Les fakes ne peuvent donc pas diverger des implémentations réelles.
+
+Exemples en place : `test/cardholders/repositories.contract.ts` (repositories + lookups) et `test/reporting/cardholders-read-models.contract.ts` (projection + read model : on rejoue des events, on vérifie les lectures).

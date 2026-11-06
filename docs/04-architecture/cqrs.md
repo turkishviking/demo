@@ -41,7 +41,8 @@ Les projections sont **idempotentes** : upsert par clé, et la `aggregateVersion
 
 ## Cohérence éventuelle côté UI
 
-- Après une commande, l'API renvoie l'id. Le front redirige vers la page de détail, dont la query tolère un `404` transitoire (une seule tentative après 300 ms côté serveur).
+- Après une commande, l'API renvoie l'id (ou `204`). La server action relit le read model jusqu'à y voir l'effet attendu (`readYourWrite`, `apps/web/lib/api/consistency.ts` : toutes les 100 ms, 2 s au plus), puis redirige ou rafraîchit la page. Au-delà du délai, la page affiche l'état connu, sans erreur.
+- Une projection qui dépend d'une ligne d'un autre agrégat pas encore projetée (ex. `PersonJoinedGroup` avant `PersonRegistered`) lève `ProjectionNotReadyError` : le relais rejouera l'event.
 - Pour les transactions, l'état `PENDING` est affiché explicitement et le flux SSE fait la mise à jour.
 
 ## Évolution prévue

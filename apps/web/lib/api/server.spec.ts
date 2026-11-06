@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { ApiError, apiGet, getHealth } from './server';
+import { ApiError, apiFind, apiGet, apiRequest, getHealth, queryString } from './server';
 
 const jsonResponse = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -53,5 +53,65 @@ describe('apiGet', () => {
   it('getHealth returns null instead of throwing', async () => {
     fetchMock.mockRejectedValue(new TypeError('fetch failed'));
     await expect(getHealth()).resolves.toBeNull();
+  });
+});
+
+describe('apiRequest', () => {
+  const fetchMock = jest.fn<Promise<Response>, Parameters<typeof fetch>>();
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  it('sends a JSON body for commands', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(201, { id: 'p-1' }));
+    await expect(apiRequest('POST', '/persons', { firstName: 'Ada' })).resolves.toEqual({
+      id: 'p-1',
+    });
+    const [, init] = fetchMock.mock.calls[0]!;
+    expect(init).toMatchObject({
+      method: 'POST',
+      body: '{"firstName":"Ada"}',
+      headers: { 'content-type': 'application/json' },
+    });
+  });
+
+  it('returns undefined for 204 No Content', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+    await expect(apiRequest('POST', '/persons/p-1/deactivate')).resolves.toBeUndefined();
+    expect(fetchMock.mock.calls[0]![1]).not.toHaveProperty('body');
+  });
+});
+
+describe('apiFind', () => {
+  const fetchMock = jest.fn<Promise<Response>, Parameters<typeof fetch>>();
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  it('returns null on 404', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(404, { type: 't', title: 'Not found', status: 404, code: 'PERSON_NOT_FOUND' }),
+    );
+    await expect(apiFind('/persons/x')).resolves.toBeNull();
+  });
+
+  it('rethrows other errors', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(500, { type: 't', title: 'Boom', status: 500, code: 'INTERNAL_ERROR' }),
+    );
+    await expect(apiFind('/persons/x')).rejects.toBeInstanceOf(ApiError);
+  });
+});
+
+describe('queryString', () => {
+  it('drops empty parameters', () => {
+    expect(queryString({ q: 'ada', status: undefined, cursor: '', limit: 10 })).toBe(
+      '?q=ada&limit=10',
+    );
+    expect(queryString({})).toBe('');
   });
 });
