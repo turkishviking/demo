@@ -1,0 +1,18 @@
+{
+  "name": "@cardsim/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Contrats d'API partagés entre api et web (types uniquement, aucune logique).",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  }
+}

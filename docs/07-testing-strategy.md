@@ -45,8 +45,13 @@
     expect(recordedEvents()).toContainEvent('CardAuthorizationRefused', { reason: 'INSUFFICIENT_AVAILABLE' });
   });
   ```
-- **Tests d'architecture** (Jest + `dependency-cruiser`) : le domaine n'importe ni Nest ni TypeORM, il n'y a pas d'import entre contexts hors `contracts`, et `presentation` n'importe pas `infrastructure/persistence`.
+- **Tests d'architecture** (Jest + `dependency-cruiser`) : le domaine n'importe ni Nest ni TypeORM, il n'y a pas d'import entre contexts hors `contracts`, et `presentation` n'importe pas `infrastructure` (sauf les `*.module.ts`, qui servent de composition root). Commande : `pnpm arch` (`apps/api/.dependency-cruiser.cjs`).
 - Les user stories ([03-features](03-features/user-stories.md)) sont tracées : chaque CA est référencé dans le nom d'au moins un test (`US-TX-1 CA4`).
+
+## Notes Testcontainers
+
+- Un conteneur `postgres:16-alpine` est démarré une fois par run (`test/postgres/global-setup.ts`), migrations appliquées. Les tests tournent en série et tronquent les tables entre eux.
+- Sur les hôtes SELinux (Fedora, Bazzite), le conteneur de nettoyage Ryuk doit être privilégié : le global setup positionne `TESTCONTAINERS_RYUK_PRIVILEGED=true` par défaut.
 
 ## CI (GitHub Actions)
 

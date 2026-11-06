@@ -1,0 +1,45 @@
+# Dépendances
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Tests
+coverage/
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+
+# Environnement (seuls les .env.example sont versionnés)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# IDE / éditeurs
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+.fleet/
+.zed/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude Code (réglages locaux)
+.claude/settings.local.json

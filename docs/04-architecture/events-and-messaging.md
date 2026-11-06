@@ -25,18 +25,21 @@ sequenceDiagram
 
 ```sql
 shared.outbox (
+  position bigserial unique,                 -- ordre d'insertion
   event_id uuid primary key, type text, version int,
-  aggregate_id uuid, aggregate_version int,
-  payload jsonb, correlation_id uuid, causation_id uuid null,
-  occurred_at timestamptz, dispatched_at timestamptz null, attempts int default 0
+  aggregate_id uuid, aggregate_version int,  -- unique (aggregate_id, aggregate_version)
+  payload jsonb, correlation_id text, causation_id text null,
+  occurred_at timestamptz, dispatched_at timestamptz null,
+  attempts int default 0, next_attempt_at timestamptz, last_error text null
 )
 shared.inbox (subscriber text, event_id uuid, processed_at timestamptz, primary key (subscriber, event_id))
 ```
 
 ## Garanties et règles
 
-- **Ordre** : garanti par agrégat (tri par `aggregate_id, aggregate_version`). Pas d'ordre global entre agrégats : les abonnés ne doivent pas en dépendre.
-- **Retry** : backoff exponentiel. Après 10 échecs, l'event part en `dead letter` (`attempts > 10`) et un log `error` est émis. Il est rejouable par CLI.
+- **Ordre** : garanti par agrégat. Un event n'est sélectionné que si tous les events précédents du même agrégat ont été livrés : un lot contient donc au plus un event par agrégat, et `drain()` enchaîne les lots. Un event en échec (ou en dead letter) bloque la suite de son agrégat. Il n'y a pas d'ordre global entre agrégats : les abonnés ne doivent pas en dépendre.
+- **Temps** : `occurred_at`, `next_attempt_at` et `dispatched_at` viennent du port `Clock` (jamais de `now()` SQL), ce qui rend le relais testable avec `ControllableClock`.
+- **Retry** : backoff exponentiel. Après 10 échecs, l'event part en `dead letter` (`attempts >= OUTBOX_MAX_ATTEMPTS`, 10 par défaut) et un log `error` est émis. Il est rejouable par CLI.
 - **Corrélation** : le `correlationId` de la commande initiale est propagé (via `AsyncLocalStorage`) à tous les events et commandes en aval. Il apparaît dans les logs et sert à suivre une saga.
 - **Pas de logique dans le relais** : il ne fait que transporter.
 - **Abonnements déclarés** dans `presentation/messaging/*.subscriptions.ts` : `on('transactions.TransactionRequested', AuthorizeOnCardPolicy)`. La policy (application) reçoit le payload du contrat, jamais une classe d'un autre context.
