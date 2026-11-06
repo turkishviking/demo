@@ -10,7 +10,7 @@ L'application est une démo de stack, avec un seul utilisateur. L'authentificati
 - **Aucune authentification** : pas de login ni de logout, pas de session, de cookie, de JWT ni de guard.
 - Pas de context Identity, pas de table d'utilisateurs, pas de `proxy.ts` de protection côté Next.js.
 - `/` affiche directement le dashboard. Toutes les routes de l'API sont publiques.
-- L'API et le front écoutent sur `localhost` par défaut. L'application **ne doit pas être exposée publiquement**.
+- En dev (`pnpm dev`), l'API et le front écoutent sur `localhost`. Avec `docker compose up`, ils sont publiés sur toutes les interfaces pour être testés depuis un autre poste du **réseau local**. L'application **ne doit pas être exposée publiquement** (Internet).
 
 ## Alternatives considérées
 - Login opérateur seedé, avec JWT en cookie httpOnly : écarté, c'est de la friction et de la complexité sans valeur pour la démo.

@@ -23,9 +23,20 @@ Détails : [docs/04-architecture/overview.md](docs/04-architecture/overview.md).
 - Argent toujours en `Money` (centimes entiers + devise), jamais en `number` flottant.
 - Temps via le port `Clock`, aléatoire via le port `RandomGenerator` : pas de `new Date()` ni de `Math.random()` dans `domain` ou `application`.
 
-## Commandes (cible)
+## Commandes
 
 ```bash
-pnpm dev | pnpm test | pnpm test:int | pnpm test:e2e | pnpm lint | pnpm typecheck
-pnpm --filter api migration:generate -- <Name>
+pnpm dev | pnpm lint | pnpm format | pnpm typecheck | pnpm arch
+pnpm test | pnpm --filter api test:cov | pnpm test:int | pnpm test:e2e
+pnpm --filter api migration:run
+docker compose up --build -d   # démo complète (postgres + api + web), accessible depuis le LAN
 ```
+
+## Socle disponible (M0)
+
+- Shared kernel : `apps/api/src/shared/domain` (`AggregateRoot`, `Entity`, `ValueObject`, `Money`, `DomainError`, `NotFoundError`, `Brand`).
+- Ports transverses : `apps/api/src/shared/application` (`Clock`, `IdGenerator`, `UnitOfWork`, `EventPublisher`, `EventBus`, `Inbox`, `CommandBus`, `QueryBus`, `EventEnvelopeFactory`, `ConcurrencyError`).
+- Repository de référence à imiter : `apps/api/test/fakes/typeorm-test-counter.repository.ts` (SQL via `TransactionContext`, verrou optimiste, `envelopes.pullFrom()` puis `publisher.publish()`).
+- Fakes de test : `apps/api/test/fakes/` (`FixedClock`, `ControllableClock`, `SequentialIdGenerator`, `InMemoryUnitOfWork`, `RecordingEventPublisher`, `InMemoryInbox`). Pour l'asynchrone : `test/helpers/eventually.ts`.
+- Codes d'erreur métier → HTTP : `registerDomainErrorStatuses()` dans le module du context.
+- Un nouveau context = un dossier `apps/api/src/<context>/` + son module importé dans `app.module.ts` + ses tables via une migration ajoutée à `src/migrations/index.ts`.

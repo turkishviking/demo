@@ -25,14 +25,14 @@
 
 - `DomainError` (classe abstraite) avec un `code: string` stable (`GROUP_FULL`) et un `context`. Chaque context définit ses sous-classes dans `domain/errors`.
 - Le domaine **lève** des `DomainError` pour les violations d'invariant. Les **refus métier attendus** (refus d'autorisation) sont des résultats, pas des exceptions.
-- L'application ne fait pas de `catch` des `DomainError`. Le filtre global `DomainErrorFilter` (presentation) les traduit en `problem+json`, à partir d'une table `code → status`.
+- L'application ne fait pas de `catch` des `DomainError`. Le filtre global `ProblemDetailsFilter` (`shared/presentation/http`) les traduit en `problem+json`, à partir d'une table `code → status` alimentée par `registerDomainErrorStatuses()` (par défaut : 404 pour un `NotFoundError`, 422 sinon).
 - Les erreurs techniques (DB, réseau) ne sont jamais converties en `DomainError`. Elles produisent un 500 avec un `correlationId` et un log `error`.
 
 ## Code
 
 - TypeScript `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`. `any` est interdit (règle ESLint).
-- ESLint (typescript-eslint, plugin `boundaries`) et Prettier. `dependency-cruiser` pour les règles de couches.
-- Imports via des alias : `@shared/*`, `@cards/*`… Pas de chemins relatifs qui remontent au-delà du context.
+- ESLint (typescript-eslint `strict`, règles Next et React Hooks pour le web) et Prettier. `dependency-cruiser` pour les règles de couches. Dans `domain` et `application`, ESLint interdit `new Date()`, `Date.now()` et `Math.random()`.
+- Imports **relatifs** (pas d'alias de chemins : le build `tsc` de Nest ne les réécrit pas). Les seuls imports qui sortent d'un context visent `shared/`, `config/` ou les `contracts/` d'un autre context. C'est vérifié par dependency-cruiser.
 - Logs structurés (`pino` via `nestjs-pino`), avec `correlationId` sur chaque ligne. Pas de `console.log`.
 - Configuration validée au démarrage (`zod`), lue depuis `.env`, avec un `.env.example` versionné.
 

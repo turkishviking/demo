@@ -1,0 +1,20 @@
+import { expect, test } from '@playwright/test';
+
+test('US-RE-1 CA0 — opening the app shows the dashboard directly, without login', async ({
+  page,
+}) => {
+  const response = await page.goto('/');
+
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveURL('/');
+  await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible();
+  await expect(
+    page.getByText(/API (opérationnelle|injoignable)|Base de données indisponible/),
+  ).toBeVisible();
+});
+
+test('unknown pages render the not-found page', async ({ page }) => {
+  const response = await page.goto('/does-not-exist');
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole('heading', { name: 'Page introuvable' })).toBeVisible();
+});
