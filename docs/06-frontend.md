@@ -4,7 +4,7 @@
 
 - **Server Components par défaut.** `"use client"` uniquement pour l'interactivité locale : formulaires avec état, graphiques, flux SSE, toasts. Les client components sont des feuilles de l'arbre, jamais des layouts.
 - **Lectures** : dans les server components, via un client API typé (`lib/api/server.ts`). Pas de `useEffect` pour charger des données.
-- **Mutations** : via des **Server Actions** (`app/**/actions.ts`, `"use server"`). Elles appellent l'API, puis `revalidatePath` / `revalidateTag`, et renvoient un état `{ ok } | { error: ProblemDetails }` consommé par `useActionState`.
+- **Mutations** : via des **Server Actions** (`app/**/actions.ts`, `"use server"`). Elles appellent l'API, attendent que le read model reflète l'écriture (`readYourWrite`), puis `revalidatePath` / `redirect`. Elles renvoient un `ActionState` (`idle | success | error(ProblemDetails)`) consommé par `useActionState` dans `ActionForm` / `ConfirmAction` (`components/forms`). Les formulaires marchent sans JS ; avec JS, la saisie est conservée en cas d'erreur.
 - **Filtres et pagination dans l'URL** (`searchParams`). Une page filtrée est donc entièrement rendue côté serveur et partageable.
 - **Streaming** : `loading.tsx` et `<Suspense>` par bloc du dashboard (KPIs, graphique, dernières transactions), chacun avec son skeleton shadcn.
 - Dans Next 16, `params` et `searchParams` sont des **Promises** (`await props.params`).
@@ -46,7 +46,7 @@ apps/web/
 | `/transactions/[id]` | chronologie, marchand, carte, personne, groupe ; boutons « Régler » et « Rembourser » selon le statut | boutons (server actions) |
 | `/cards` · `/cards/[id]` | liste, puis détail avec jauge du disponible, actions bloquer / débloquer / plafond / rembourser l'encours, transactions de la carte | dialogs |
 | `/people` · `/people/[id]` | liste, puis détail : cartes, groupe, total ; action désactiver (avec confirmation) | dialog |
-| `/groups` · `/groups/[id]` | liste, puis détail : membres, ajout et retrait, capacité, archivage | combobox de personnes |
+| `/groups` · `/groups/[id]` | liste, puis détail : membres, ajout et retrait, capacité, archivage | sélection d'une personne (`<select>` natif). Les personnes déjà membres d'un autre groupe restent proposées, annotées : c'est l'API qui applique la règle « un seul groupe » et le message l'explique |
 | `/simulation` | formulaire de lancement, simulation en cours (compteur, bouton stop), flux en direct, historique | SSE |
 
 ## UI

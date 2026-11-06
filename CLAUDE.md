@@ -40,3 +40,16 @@ docker compose up --build -d   # démo complète (postgres + api + web), accessi
 - Fakes de test : `apps/api/test/fakes/` (`FixedClock`, `ControllableClock`, `SequentialIdGenerator`, `InMemoryUnitOfWork`, `RecordingEventPublisher`, `InMemoryInbox`). Pour l'asynchrone : `test/helpers/eventually.ts`.
 - Codes d'erreur métier → HTTP : `registerDomainErrorStatuses()` dans le module du context.
 - Un nouveau context = un dossier `apps/api/src/<context>/` + son module importé dans `app.module.ts` + ses tables via une migration ajoutée à `src/migrations/index.ts`.
+
+## Context de référence (M1)
+
+`apps/api/src/cardholders/` (write) et `apps/api/src/reporting/` (read) sont le modèle à suivre pour les contexts suivants :
+
+- `contracts/` : types et payloads des events publiés, seuls importables par un autre context (le domaine les utilise aussi pour typer ses events).
+- `domain/` : agrégats (`*.aggregate.ts`), VO (`*.vo.ts`), erreurs, interface + token du repository.
+- `application/` : commandes et handlers (classes TS pures), ports de lookup, policies.
+- `infrastructure/persistence/` : repositories SQL (violations d'unicité traduites via `isUniqueViolation`).
+- `presentation/` : controllers, DTO, `*-error-statuses.ts`, `messaging/*.subscriptions.ts`, et le module qui câble tout dans `onModuleInit`.
+- Reporting : projection (application) → `*ProjectionStore` (SQL, mises à jour versionnées) ; queries → `*ReadModel` (SQL), pagination par curseur (`reporting/application/pagination.ts`).
+- Tests : builders et fakes in-memory dans `apps/api/test/<context>/`, suites de contrat partagées entre fakes (unit) et SQL (`*.int-spec.ts`).
+- Front : client typé `apps/web/lib/api/<context>.ts`, server actions + `readYourWrite`, `ActionForm` / `ConfirmAction`.

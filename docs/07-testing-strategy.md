@@ -14,7 +14,7 @@
 | Unit | agrégats, VO, domain services, command / query handlers, policies, générateur de simulation | Jest | `*.spec.ts` | aucune (fakes in-memory) | < 10 s pour toute la suite |
 | Intégration | repositories (tests de contrat), mappers, UnitOfWork, outbox et relais, inbox, projections, read models SQL, controllers (`@nestjs/testing` + supertest, avec les handlers réels) | Jest + **Testcontainers** Postgres 16 | `*.int-spec.ts` | conteneur partagé par worker, schémas tronqués entre les tests | < 2 min |
 | API E2E | sagas complètes par HTTP : autorisation, désactivation en cascade, timeout, compensation, remboursement | Jest + supertest + `ControllableClock` | `*.e2e-spec.ts` | conteneur dédié | < 3 min |
-| UI E2E | arrivée directe sur le dashboard, filtrer les transactions, émettre une carte, lancer une simulation et voir le flux, désactiver une personne | **Playwright** | `apps/web/e2e/*.spec.ts` | `docker compose` (api + web + db) | < 5 min |
+| UI E2E | arrivée directe sur le dashboard, filtrer les transactions, émettre une carte, lancer une simulation et voir le flux, désactiver une personne | **Playwright** | `apps/web/e2e/*.spec.ts` | Postgres de `docker compose` (base `cardsim_e2e`) | < 5 min |
 | Front unit | composants de présentation, server actions, mapping des erreurs | Jest + Testing Library | `*.spec.tsx` | – | – |
 
 ## Couverture (seuils bloquants en CI)
@@ -52,6 +52,13 @@
 
 - Un conteneur `postgres:16-alpine` est démarré une fois par run (`test/postgres/global-setup.ts`), migrations appliquées. Les tests tournent en série et tronquent les tables entre eux.
 - Sur les hôtes SELinux (Fedora, Bazzite), le conteneur de nettoyage Ryuk doit être privilégié : le global setup positionne `TESTCONTAINERS_RYUK_PRIVILEGED=true` par défaut.
+- La base de test est jetable : données en `tmpfs`, `fsync`, `synchronous_commit` et `full_page_writes` désactivés. Sans cela, chaque `TRUNCATE` coûte environ 1 s (contre ~10 ms).
+
+## Notes Playwright
+
+- Par défaut, `pnpm --filter web test:e2e` compile et démarre l'API (port 3101) et le front (port 3100) sur une base dédiée `cardsim_e2e` du Postgres de `docker compose` (créée au besoin, migrations appliquées). Les tests créent des données uniques : pas de nettoyage entre les runs.
+- `E2E_BASE_URL=http://127.0.0.1:3000` vise une stack déjà lancée (`docker compose up`) ; `E2E_DATABASE_URL` change de base.
+- Ne jamais faire tourner deux versions de l'API sur la même base : chaque relais consomme l'outbox, et une version sans abonné marque les events comme livrés sans les traiter.
 
 ## CI (GitHub Actions)
 
